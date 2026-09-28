@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send,
   Sparkles,
@@ -39,6 +39,7 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
   const [modelDropdownOpen, setModelDropdownOpen] = useState<boolean>(false);
   const [webSearchEnabled, setWebSearchEnabled] = useState<boolean>(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialPrompt) {
@@ -49,6 +50,31 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
       }
     }
   }, [initialPrompt]);
+
+  // Close dropdown on outside click or escape
+  const handleDropdownClose = useCallback(() => {
+    setModelDropdownOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        handleDropdownClose();
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleDropdownClose();
+    };
+
+    if (modelDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEsc);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [modelDropdownOpen, handleDropdownClose]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
@@ -97,11 +123,16 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
   };
 
   const activeModel = models.find((m) => m.id === activeModelId) || models[0];
+  const estimatedTokens = Math.round(prompt.length / 3.8);
 
   return (
-    <div className="w-full border-t border-border/80 bg-card p-3 md:p-4 space-y-3">
+    <footer className="w-full border-t border-border bg-card p-3 md:p-4 space-y-2.5">
       {/* Quick Action Chips Bar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+      <div
+        className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar"
+        role="toolbar"
+        aria-label="Quick prompt starters"
+      >
         <span className="text-muted-foreground text-[11px] font-medium shrink-0 flex items-center gap-1 mr-1">
           <Sparkles className="h-3 w-3 text-primary" />
           <span>Quick:</span>
@@ -111,7 +142,7 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
             key={action.id}
             type="button"
             onClick={() => handleQuickAction(action.template(activePageContext))}
-            className="rounded-full border border-border/70 bg-background/80 px-2.5 py-1 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1 font-medium"
+            className="rounded-full border border-border bg-background/80 px-2.5 py-1 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/50 transition-colors shrink-0 flex items-center gap-1 font-medium focus-visible:ring-1 focus-visible:ring-primary"
           >
             <span>{action.label}</span>
           </button>
@@ -127,14 +158,14 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
               <span className="text-muted-foreground text-[11px]">Context Active:</span>
-              <span className="font-medium text-foreground truncate max-w-[280px] sm:max-w-md text-[11px]">
+              <span className="font-medium text-foreground truncate max-w-[240px] sm:max-w-md text-[11px]">
                 {activePageContext.title} ({activePageContext.domain})
               </span>
             </div>
             <button
               type="button"
               onClick={togglePageContextEnabled}
-              className="text-muted-foreground hover:text-foreground p-0.5 rounded"
+              className="text-muted-foreground hover:text-foreground p-0.5 rounded focus-visible:ring-1 focus-visible:ring-primary"
               aria-label="Remove page context"
             >
               <X className="h-3.5 w-3.5" />
@@ -143,7 +174,11 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
         )}
 
         {/* Text Input Area */}
+        <label htmlFor="prompt-composer-input" className="sr-only">
+          {isCompareMode ? "Compare prompt across models" : `Message ${activeModel.shortName}`}
+        </label>
         <textarea
+          id="prompt-composer-input"
           ref={textareaRef}
           rows={1}
           value={prompt}
@@ -152,22 +187,24 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
           placeholder={
             isCompareMode
               ? "Ask a question to compare parallel responses from GPT-4o, Claude 3.5, and Gemini 1.5..."
-              : `Ask ${activeModel.shortName} anything, or use webpage context... (Shift+Enter for new line)`
+              : `Ask ${activeModel.shortName} anything, or use webpage context... (Shift+Enter for newline)`
           }
           className="w-full resize-none bg-transparent px-4 py-3 text-xs md:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none min-h-[44px] max-h-[180px] leading-relaxed"
         />
 
         {/* Bottom Bar: Model Selector, Web Search, Attach, Send */}
-        <div className="flex items-center justify-between px-3 py-2 border-t border-border/40 text-xs">
+        <div className="flex flex-wrap items-center justify-between px-3 py-2 border-t border-border/40 text-xs gap-2">
           {/* Left Controls */}
           <div className="flex items-center gap-2">
             {/* Model Selector Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-card px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted transition-colors focus-visible:ring-1 focus-visible:ring-primary"
                 aria-label="Select AI model"
+                aria-expanded={modelDropdownOpen}
+                aria-haspopup="listbox"
               >
                 <ModelIcon provider={activeModel.provider} size="sm" />
                 <span className="hidden sm:inline">{activeModel.name}</span>
@@ -177,7 +214,11 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
 
               {/* Model Menu Dropdown */}
               {modelDropdownOpen && (
-                <div className="absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-border bg-card p-1.5 shadow-xl z-30 animate-in fade-in slide-in-from-bottom-2">
+                <div
+                  role="listbox"
+                  aria-label="Available AI models"
+                  className="absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-border bg-card p-1.5 shadow-xl z-30 animate-in fade-in slide-in-from-bottom-2"
+                >
                   <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Select AI Model
                   </div>
@@ -186,6 +227,8 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
                       <button
                         key={m.id}
                         type="button"
+                        role="option"
+                        aria-selected={activeModelId === m.id}
                         onClick={() => {
                           setActiveModelId(m.id);
                           setModelDropdownOpen(false);
@@ -213,11 +256,12 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
             <button
               type="button"
               onClick={() => setIsCompareMode(!isCompareMode)}
+              aria-pressed={isCompareMode}
               className={cn(
-                "hidden sm:flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors",
+                "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors focus-visible:ring-1 focus-visible:ring-primary",
                 isCompareMode
                   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500 font-semibold"
-                  : "border-border/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               <Columns3 className="h-3.5 w-3.5" />
@@ -229,8 +273,10 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
               type="button"
               onClick={() => setWebSearchEnabled(!webSearchEnabled)}
               title={webSearchEnabled ? "Live web ground enabled" : "Web ground disabled"}
+              aria-label={webSearchEnabled ? "Disable web search grounding" : "Enable web search grounding"}
+              aria-pressed={webSearchEnabled}
               className={cn(
-                "flex items-center gap-1 rounded-lg p-1.5 transition-colors",
+                "flex items-center gap-1 rounded-lg p-1.5 transition-colors focus-visible:ring-1 focus-visible:ring-primary",
                 webSearchEnabled
                   ? "text-blue-500 bg-blue-500/10"
                   : "text-muted-foreground hover:bg-muted"
@@ -238,18 +284,25 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
             >
               <Globe className="h-3.5 w-3.5" />
             </button>
+
+            {/* Token Counter Helper */}
+            {prompt.length > 0 && (
+              <span className="text-[10px] font-mono text-muted-foreground hidden lg:inline">
+                ~{estimatedTokens} tokens
+              </span>
+            )}
           </div>
 
           {/* Right Controls: Send Button */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground hidden md:inline font-mono">
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-[11px] text-muted-foreground hidden sm:inline font-mono">
               ↵ Enter
             </span>
             <Button
               size="sm"
               disabled={!prompt.trim() || isStreaming}
               onClick={handleSubmit}
-              className="gap-1.5 text-xs font-semibold px-3"
+              className="gap-1.5 text-xs font-semibold px-3.5 shadow-xs"
             >
               <span>{isCompareMode ? "Compare" : "Send"}</span>
               <Send className="h-3 w-3" />
@@ -257,6 +310,6 @@ export function PromptComposer({ initialPrompt = "", onPromptChange }: PromptCom
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 }

@@ -8,6 +8,8 @@ import {
   Send,
   ArrowUpRight,
   Clock,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 import { ModelIcon } from "@/components/shared/ModelIcon";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +21,9 @@ export function InteractiveProductPreview() {
   const [activeTab, setActiveTab] = useState<"chat" | "compare">("compare");
   const [selectedModelId, setSelectedModelId] = useState<string>("gpt-4o");
   const [activePromptIndex, setActivePromptIndex] = useState<number>(0);
+  const [customQuery, setCustomQuery] = useState<string>("");
+  const [inputVal, setInputVal] = useState<string>("");
+  const [isSimulatingStream, setIsSimulatingStream] = useState<boolean>(false);
 
   const samplePrompts = [
     {
@@ -44,41 +49,51 @@ export function InteractiveProductPreview() {
   ];
 
   const current = samplePrompts[activePromptIndex];
+  const displayQuery = customQuery || current.query;
+
+  const handleSendPrompt = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!inputVal.trim()) return;
+    const text = inputVal.trim();
+    setCustomQuery(text);
+    setInputVal("");
+    setIsSimulatingStream(true);
+    setTimeout(() => {
+      setIsSimulatingStream(false);
+    }, 700);
+  };
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl rounded-2xl border border-border/80 bg-card/95 shadow-2xl overflow-hidden glass-panel">
+    <div className="relative mx-auto w-full max-w-5xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden glass-panel">
       {/* Top Application Bar Mockup */}
-      <div className="flex flex-wrap items-center justify-between border-b border-border/70 bg-muted/40 px-4 py-2.5 gap-2">
-        {/* Window controls & active context */}
+      <div className="flex flex-wrap items-center justify-between border-b border-border bg-muted/40 px-4 py-2.5 gap-2">
+        {/* Active context and sandbox indicator */}
         <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <div className="h-3 w-3 rounded-full bg-red-500/80" />
-            <div className="h-3 w-3 rounded-full bg-amber-500/80" />
-            <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-          </div>
-          <span className="text-xs text-muted-foreground font-mono ml-2 hidden sm:inline">
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-semibold text-foreground">Interactive Sandbox</span>
+          <span className="text-border">|</span>
+          <span className="text-xs text-muted-foreground font-mono hidden sm:inline">
             echogpt.app/workspace
           </span>
-          <Badge variant="success" size="sm" className="hidden md:inline-flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Active Side Panel Sync</span>
+          <Badge variant="outline" size="sm" className="hidden md:inline-flex text-[10px]">
+            DOM Sync Active
           </Badge>
         </div>
 
         {/* View Mode Switcher (Chat vs Compare AI) */}
-        <div className="flex items-center rounded-lg bg-background p-1 border border-border/60 text-xs">
+        <div className="flex items-center rounded-lg bg-background p-1 border border-border text-xs">
           <button
             type="button"
             onClick={() => setActiveTab("compare")}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1 rounded-md transition-all font-medium",
               activeTab === "compare"
-                ? "bg-primary text-primary-foreground shadow-sm font-semibold"
+                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             <Columns3 className="h-3.5 w-3.5" />
-            <span>Compare AI Mode</span>
+            <span>Compare AI</span>
             <span className="rounded bg-black/20 px-1 py-0.2 text-[9px] uppercase font-bold">
               3 Models
             </span>
@@ -89,12 +104,12 @@ export function InteractiveProductPreview() {
             className={cn(
               "flex items-center gap-1.5 px-3 py-1 rounded-md transition-all font-medium",
               activeTab === "chat"
-                ? "bg-primary text-primary-foreground shadow-sm font-semibold"
+                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             <Bot className="h-3.5 w-3.5" />
-            <span>Standard Chat</span>
+            <span>Single Chat</span>
           </button>
         </div>
 
@@ -103,24 +118,27 @@ export function InteractiveProductPreview() {
           href="/workspace"
           className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
         >
-          <span>Open Full Workspace</span>
+          <span>Launch Full Workspace</span>
           <ArrowUpRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 
       {/* Interactive Prompt Selector Chips */}
-      <div className="border-b border-border/60 bg-card/60 px-4 py-2 flex items-center gap-2 overflow-x-auto text-xs">
+      <div className="border-b border-border bg-card/60 px-4 py-2 flex items-center gap-2 overflow-x-auto text-xs">
         <span className="text-muted-foreground shrink-0 font-medium">Try Scenario:</span>
         {samplePrompts.map((p, idx) => (
           <button
             key={idx}
             type="button"
-            onClick={() => setActivePromptIndex(idx)}
+            onClick={() => {
+              setActivePromptIndex(idx);
+              setCustomQuery("");
+            }}
             className={cn(
               "rounded-lg px-2.5 py-1 transition-all shrink-0 font-medium",
-              activePromptIndex === idx
+              activePromptIndex === idx && !customQuery
                 ? "bg-primary/10 text-primary border border-primary/30 shadow-xs"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
             )}
           >
             {p.label}
@@ -128,14 +146,14 @@ export function InteractiveProductPreview() {
         ))}
         <div className="ml-auto hidden sm:flex items-center gap-1 text-[11px] text-muted-foreground">
           <Clock className="h-3 w-3 text-emerald-500" />
-          <span>Concurrent Multi-Model Streaming</span>
+          <span>Real-time Concurrent Inference</span>
         </div>
       </div>
 
       {/* Main Preview Content Body */}
       <div className="p-4 md:p-6 bg-background/50 min-h-[360px]">
         {/* User Prompt Message Card */}
-        <div className="mb-4 rounded-xl border border-border/80 bg-card p-3.5 shadow-xs">
+        <div className="mb-4 rounded-xl border border-border bg-card p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-foreground">User Query</span>
@@ -143,17 +161,17 @@ export function InteractiveProductPreview() {
                 Page Context: nature.com
               </span>
             </div>
-            <span className="text-[11px] font-mono">Parallel Dispatch</span>
+            <span className="text-[11px] font-mono text-emerald-500">Parallel Broadcast</span>
           </div>
-          <p className="text-sm font-medium text-foreground">{current.query}</p>
+          <p className="text-sm font-medium text-foreground">{displayQuery}</p>
         </div>
 
         {/* Tab 1: Compare AI Mode View (3 Parallel Columns) */}
         {activeTab === "compare" ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Column 1: GPT-4o */}
-            <div className="flex flex-col rounded-xl border border-emerald-500/20 bg-card p-3.5 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-2">
+            <div className="flex flex-col rounded-xl border border-emerald-500/25 bg-card p-3.5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-border pb-2 mb-2">
                 <div className="flex items-center gap-2">
                   <ModelIcon provider="openai" size="sm" />
                   <div>
@@ -166,17 +184,24 @@ export function InteractiveProductPreview() {
                 </span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed flex-1">
-                {current.gptResponse}
+                {isSimulatingStream ? (
+                  <span className="flex items-center gap-1.5 text-muted-foreground py-4">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>Streaming response...</span>
+                  </span>
+                ) : (
+                  current.gptResponse
+                )}
               </p>
-              <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="text-emerald-500 font-medium">99.4% Accuracy</span>
+              <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
+                <span className="text-emerald-500 font-medium">99.4% Benchmark</span>
                 <span className="text-[10px] font-mono">128K ctx</span>
               </div>
             </div>
 
             {/* Column 2: Claude 3.5 Sonnet */}
-            <div className="flex flex-col rounded-xl border border-amber-500/20 bg-card p-3.5 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-2">
+            <div className="flex flex-col rounded-xl border border-amber-500/25 bg-card p-3.5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-border pb-2 mb-2">
                 <div className="flex items-center gap-2">
                   <ModelIcon provider="anthropic" size="sm" />
                   <div>
@@ -189,17 +214,24 @@ export function InteractiveProductPreview() {
                 </span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed flex-1">
-                {current.claudeResponse}
+                {isSimulatingStream ? (
+                  <span className="flex items-center gap-1.5 text-muted-foreground py-4">
+                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping" />
+                    <span>Streaming response...</span>
+                  </span>
+                ) : (
+                  current.claudeResponse
+                )}
               </p>
-              <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
+              <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="text-amber-500 font-medium">Top Reasoning</span>
                 <span className="text-[10px] font-mono">200K ctx</span>
               </div>
             </div>
 
             {/* Column 3: Gemini 1.5 Pro */}
-            <div className="flex flex-col rounded-xl border border-blue-500/20 bg-card p-3.5 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2 mb-2">
+            <div className="flex flex-col rounded-xl border border-blue-500/25 bg-card p-3.5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-border pb-2 mb-2">
                 <div className="flex items-center gap-2">
                   <ModelIcon provider="google" size="sm" />
                   <div>
@@ -212,9 +244,16 @@ export function InteractiveProductPreview() {
                 </span>
               </div>
               <p className="text-xs text-foreground/90 leading-relaxed flex-1">
-                {current.geminiResponse}
+                {isSimulatingStream ? (
+                  <span className="flex items-center gap-1.5 text-muted-foreground py-4">
+                    <span className="h-2 w-2 rounded-full bg-blue-500 animate-ping" />
+                    <span>Streaming response...</span>
+                  </span>
+                ) : (
+                  current.geminiResponse
+                )}
               </p>
-              <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
+              <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
                 <span className="text-blue-500 font-medium">Document Synthesis</span>
                 <span className="text-[10px] font-mono">2M ctx</span>
               </div>
@@ -222,8 +261,8 @@ export function InteractiveProductPreview() {
           </div>
         ) : (
           /* Tab 2: Standard Single-Model Chat View */
-          <div className="rounded-xl border border-border/80 bg-card p-4 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3">
+            <div className="flex items-center justify-between border-b border-border pb-2.5">
               <div className="flex items-center gap-2">
                 <ModelIcon modelId={selectedModelId} size="sm" />
                 <span className="text-xs font-bold text-foreground">
@@ -233,7 +272,7 @@ export function InteractiveProductPreview() {
                   Active
                 </Badge>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {AI_MODELS.slice(0, 3).map((m) => (
                   <button
                     key={m.id}
@@ -253,14 +292,21 @@ export function InteractiveProductPreview() {
             </div>
 
             <p className="text-sm text-foreground/90 leading-relaxed">
-              {selectedModelId === "claude-3-5-sonnet"
-                ? current.claudeResponse
-                : selectedModelId === "gemini-1-5-pro"
-                ? current.geminiResponse
-                : current.gptResponse}
+              {isSimulatingStream ? (
+                <span className="flex items-center gap-1.5 text-muted-foreground py-4">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                  <span>Streaming model response...</span>
+                </span>
+              ) : selectedModelId === "claude-3-5-sonnet" ? (
+                current.claudeResponse
+              ) : selectedModelId === "gemini-1-5-pro" ? (
+                current.geminiResponse
+              ) : (
+                current.gptResponse
+              )}
             </p>
 
-            <div className="pt-2 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
+            <div className="pt-2 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[10px] text-emerald-500">Latency: 780ms</span>
                 <span>·</span>
@@ -268,7 +314,7 @@ export function InteractiveProductPreview() {
               </div>
               <Link href="/workspace">
                 <Button size="sm" variant="ghost" className="h-7 text-xs">
-                  Continue this chat in Workspace →
+                  Continue in Workspace →
                 </Button>
               </Link>
             </div>
@@ -276,24 +322,38 @@ export function InteractiveProductPreview() {
         )}
       </div>
 
-      {/* Simulated Composer Bar */}
-      <div className="border-t border-border/70 bg-card p-3 flex items-center justify-between gap-3">
+      {/* Fully Functional Interactive Composer Bar */}
+      <form
+        onSubmit={handleSendPrompt}
+        className="border-t border-border bg-card p-3 flex items-center justify-between gap-3"
+      >
         <div className="flex items-center gap-2 flex-1">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+          <Sparkles className="h-4 w-4 text-primary shrink-0" />
           <input
             type="text"
-            readOnly
-            value="Click 'Open Full Workspace' to type custom prompts, attach files, and customize keys..."
-            className="w-full bg-transparent text-xs text-muted-foreground cursor-pointer focus:outline-none"
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            placeholder="Type your own question or test prompt here..."
+            className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
-        <Link href="/workspace">
-          <Button size="sm" className="gap-1.5 text-xs">
-            <span>Try Workspace</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={!inputVal.trim() || isSimulatingStream}
+            className="gap-1.5 text-xs font-semibold px-3"
+          >
+            <span>Ask</span>
             <Send className="h-3 w-3" />
           </Button>
-        </Link>
-      </div>
+          <Link href="/workspace">
+            <Button size="sm" variant="outline" className="text-xs font-medium hidden sm:inline-flex">
+              Full Studio
+            </Button>
+          </Link>
+        </div>
+      </form>
     </div>
   );
 }

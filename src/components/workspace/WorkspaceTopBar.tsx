@@ -1,7 +1,7 @@
 "use client";
 
 import { ChromeIcon as Chrome } from "@/components/shared/ChromeIcon";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   Menu,
@@ -41,6 +41,29 @@ export function WorkspaceTopBar() {
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(activeConversation?.title || "");
+  const modelMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (modelMenuRef.current && !modelMenuRef.current.contains(e.target as Node)) {
+        setIsModelMenuOpen(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsModelMenuOpen(false);
+        setIsEditingTitle(false);
+      }
+    };
+    if (isModelMenuOpen || isEditingTitle) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keydown", handleEsc);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [isModelMenuOpen, isEditingTitle]);
 
   const handleTitleSave = () => {
     if (activeConversation && titleDraft.trim()) {
@@ -158,11 +181,13 @@ export function WorkspaceTopBar() {
           </button>
 
           {/* Model Selector Trigger */}
-          <div className="relative">
+          <div className="relative" ref={modelMenuRef}>
             <button
               type="button"
               onClick={() => setIsModelMenuOpen(!isModelMenuOpen)}
-              className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+              aria-expanded={isModelMenuOpen}
+              aria-haspopup="listbox"
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted transition-colors focus-visible:ring-1 focus-visible:ring-primary"
               aria-label="Select AI model"
             >
               <ModelIcon provider={activeModel.provider} size="sm" />
@@ -171,7 +196,11 @@ export function WorkspaceTopBar() {
             </button>
 
             {isModelMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-border bg-card p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2">
+              <div
+                role="listbox"
+                aria-label="Select active model"
+                className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-border bg-card p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2"
+              >
                 <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Active Model
                 </div>

@@ -25,7 +25,7 @@ import { AUTHENTIC_EXTENSION_INFO } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
 export function SettingsView() {
-  const { settings, updateSettings, models } = useApp();
+  const { settings, updateSettings, models, simulateNetworkError } = useApp();
 
   const [activeTab, setActiveTab] = useState<
     "general" | "appearance" | "models" | "context" | "shortcuts" | "account"
@@ -252,6 +252,27 @@ export function SettingsView() {
                     }
                     className="h-4 w-4 rounded border-border text-primary accent-primary"
                   />
+                </div>
+
+                {/* Reviewer Diagnostics & Error Handling Test */}
+                <div className="rounded-xl border border-border bg-muted/15 p-4 space-y-2">
+                  <div className="font-semibold text-foreground text-xs">
+                    Reviewer & Diagnostics Suite
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Test client-side edge-state resilience, simulated network timeouts, and 429 rate limit recovery banners.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      simulateNetworkError();
+                      alert("Simulated Rate Limit Error triggered. Return to Workspace to see the error banner and recovery flow.");
+                    }}
+                    className="text-xs h-7 text-rose-500 border-rose-500/30 hover:bg-rose-500/10"
+                  >
+                    Simulate API Rate Limit (429)
+                  </Button>
                 </div>
               </div>
             </div>

@@ -38,6 +38,10 @@ interface AppContextType {
 
   // Chat Actions
   isStreaming: boolean;
+  chatError: string | null;
+  clearChatError: () => void;
+  simulateNetworkError: () => void;
+  clearAllConversations: () => void;
   sendMessage: (content: string, modelIdOverride?: string) => Promise<void>;
   regenerateLastResponse: () => Promise<void>;
   setMessageReaction: (messageId: string, reaction: "up" | "down" | null) => void;
@@ -50,6 +54,7 @@ interface AppContextType {
   activeCompareSession: CompareSession;
   runCompare: (prompt: string, modelIds?: string[]) => Promise<void>;
   loadComparePreset: (index: number) => void;
+  branchFromCompare: (modelId: string) => void;
 
   // Page Context
   activePageContext: PageContext;
@@ -85,6 +90,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>(MOCK_CONVERSATIONS);
   const [activeConversationId, setActiveConversationId] = useState<string>("conv-1");
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [chatError, setChatError] = useState<string | null>(null);
 
   // Compare Mode
   const [isCompareMode, setIsCompareMode] = useState<boolean>(false);
@@ -555,6 +561,76 @@ Regarding **"${prompt.slice(0, 60)}${prompt.length > 60 ? "..." : ""}"**:
     }
   };
 
+  const branchFromCompare = (modelId: string) => {
+    const model = models.find((m) => m.id === modelId) || activeModel;
+    const responseData = activeCompareSession.responses[modelId];
+    if (!responseData || !responseData.content) return;
+
+    const newId = `conv-${Date.now()}`;
+    const userMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      role: "user",
+      content: activeCompareSession.prompt,
+      timestamp: new Date().toISOString(),
+      pageContextSnippet: activePageContext.enabled ? activePageContext.domain : undefined,
+    };
+
+    const assistantMsg: ChatMessage = {
+      id: `msg-${Date.now() + 1}`,
+      role: "assistant",
+      modelId,
+      content: responseData.content,
+      timestamp: new Date().toISOString(),
+      metrics: {
+        latencyMs: responseData.latencyMs || 780,
+        tokenCount: responseData.tokenCount || 420,
+        tokensPerSec: Math.round(((responseData.tokenCount || 420) / ((responseData.latencyMs || 780) / 1000)) * 10) / 10,
+      },
+    };
+
+    const newConv: Conversation = {
+      id: newId,
+      title: `${model.shortName}: ${activeCompareSession.prompt.slice(0, 32)}...`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      modelId,
+      isFavorite: false,
+      preview: responseData.content.slice(0, 60),
+      messages: [userMsg, assistantMsg],
+      context: activePageContext.enabled ? activePageContext : undefined,
+    };
+
+    setConversations((prev) => [newConv, ...prev]);
+    setActiveConversationId(newId);
+    setActiveModelId(modelId);
+    setIsCompareMode(false);
+  };
+
+  const clearChatError = () => {
+    setChatError(null);
+  };
+
+  const simulateNetworkError = () => {
+    setChatError("Rate limit reached (429 Too Many Requests). Please wait 30 seconds or configure BYOK API key in Settings.");
+  };
+
+  const clearAllConversations = () => {
+    const freshId = `conv-${Date.now()}`;
+    setConversations([
+      {
+        id: freshId,
+        title: "New Conversation",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        modelId: activeModelId,
+        isFavorite: false,
+        preview: "Start a conversation...",
+        messages: [],
+      },
+    ]);
+    setActiveConversationId(freshId);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -572,6 +648,10 @@ Regarding **"${prompt.slice(0, 60)}${prompt.length > 60 ? "..." : ""}"**:
         toggleFavorite,
         setConversationCollection,
         isStreaming,
+        chatError,
+        clearChatError,
+        simulateNetworkError,
+        clearAllConversations,
         sendMessage,
         regenerateLastResponse,
         setMessageReaction,
@@ -582,6 +662,7 @@ Regarding **"${prompt.slice(0, 60)}${prompt.length > 60 ? "..." : ""}"**:
         activeCompareSession,
         runCompare,
         loadComparePreset,
+        branchFromCompare,
         activePageContext,
         setActivePageContext,
         switchDemoPage,

@@ -10,16 +10,16 @@ import { AUTHENTIC_EXTENSION_INFO } from "@/data/mockData";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28">
-      {/* Background ambient radial gradients */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[640px] rounded-full bg-gradient-to-tr from-emerald-500/10 via-teal-500/10 to-cyan-500/5 blur-[120px] pointer-events-none -z-10" />
+    <section id="hero" aria-label="Hero Overview" className="relative overflow-hidden pt-10 pb-16 md:pt-16 md:pb-24">
+      {/* Subtle architectural ambient glow */}
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 h-[320px] w-[580px] rounded-full bg-primary/10 blur-[100px] pointer-events-none -z-10" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Authentic Store Badge */}
         <div className="flex justify-center mb-6">
           <Link
             href="/extension"
-            className="group inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground hover:border-primary/50 hover:bg-card transition-all shadow-xs"
+            className="group inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground hover:border-primary/50 hover:bg-muted/40 transition-all shadow-xs"
           >
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-semibold text-foreground">EchoGPT 2.0</span>
@@ -36,11 +36,11 @@ export function Hero() {
         </div>
 
         {/* Hero Title & Value Proposition */}
-        <div className="mx-auto max-w-4xl text-center space-y-5">
+        <div className="mx-auto max-w-4xl text-center space-y-4">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-foreground font-sans">
             Every AI model.{" "}
-            <span className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 bg-clip-text text-transparent">
-              One intelligent workspace.
+            <span className="text-emerald-500 dark:text-emerald-400 block sm:inline">
+              One unified workspace.
             </span>
           </h1>
 
@@ -52,7 +52,7 @@ export function Hero() {
           {/* Primary Action Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link href="/workspace">
-              <Button size="lg" className="gap-2 text-sm font-semibold shadow-lg shadow-primary/20">
+              <Button size="lg" className="gap-2 text-sm font-semibold shadow-md shadow-primary/20">
                 <span>Start Using EchoGPT</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -67,7 +67,7 @@ export function Hero() {
           </div>
 
           {/* Trust & Architecture Points */}
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+          <div className="pt-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
               <span>Zero session tracking</span>
@@ -84,7 +84,7 @@ export function Hero() {
         </div>
 
         {/* Interactive Product Preview Card */}
-        <div className="mt-12 md:mt-16">
+        <div className="mt-10 md:mt-14">
           <InteractiveProductPreview />
         </div>
       </div>

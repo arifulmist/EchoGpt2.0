@@ -17,7 +17,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Hero />
         <CompareShowcase />
         <FeaturesGrid />

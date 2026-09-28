@@ -15,17 +15,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { ModelIcon } from "@/components/shared/ModelIcon";
 import { AUTHENTIC_EXTENSION_INFO } from "@/data/mockData";
+import { cn } from "@/lib/utils";
 
 export function ChromeExtensionShowcase() {
   const [activeTab, setActiveTab] = useState<"summarize" | "selection" | "ask">("summarize");
 
   return (
-    <section className="py-20 md:py-28 border-t border-border/60 bg-muted/20">
+    <section id="extension-showcase" aria-label="Chrome Side Panel Details" className="py-16 md:py-24 border-t border-border bg-muted/15">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Left Column: Copy & Value Proposition */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500">
+          <div className="lg:col-span-5 space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500">
               <Chrome className="h-3.5 w-3.5" />
               <span>Native Chrome Side Panel API</span>
             </div>
@@ -40,14 +41,18 @@ export function ChromeExtensionShowcase() {
             </p>
 
             {/* Quick Extension Feature Points */}
-            <div className="space-y-3 pt-2">
-              <div
+            <div className="space-y-2.5 pt-1" role="tablist" aria-label="Extension feature showcases">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "summarize"}
                 onClick={() => setActiveTab("summarize")}
-                className={`cursor-pointer rounded-xl border p-3 transition-all ${
+                className={cn(
+                  "w-full text-left rounded-xl border p-3 transition-all",
                   activeTab === "summarize"
-                    ? "border-primary bg-card shadow-sm"
-                    : "border-border/60 bg-card/60 hover:bg-card"
-                }`}
+                    ? "border-primary bg-card shadow-xs"
+                    : "border-border bg-card/60 hover:bg-card"
+                )}
               >
                 <div className="flex items-center justify-between text-xs font-semibold text-foreground">
                   <div className="flex items-center gap-2">
@@ -57,17 +62,21 @@ export function ChromeExtensionShowcase() {
                   <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Synthesize 20-page papers and documentation down to core bullet points in 1 second.
+                  Synthesize long papers and documentation down to core bullet points in 1 second.
                 </p>
-              </div>
+              </button>
 
-              <div
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "selection"}
                 onClick={() => setActiveTab("selection")}
-                className={`cursor-pointer rounded-xl border p-3 transition-all ${
+                className={cn(
+                  "w-full text-left rounded-xl border p-3 transition-all",
                   activeTab === "selection"
-                    ? "border-primary bg-card shadow-sm"
-                    : "border-border/60 bg-card/60 hover:bg-card"
-                }`}
+                    ? "border-primary bg-card shadow-xs"
+                    : "border-border bg-card/60 hover:bg-card"
+                )}
               >
                 <div className="flex items-center justify-between text-xs font-semibold text-foreground">
                   <div className="flex items-center gap-2">
@@ -79,15 +88,19 @@ export function ChromeExtensionShowcase() {
                 <p className="text-[11px] text-muted-foreground mt-1">
                   Highlight confusing jargon or complex equations to see instant intuitive breakdowns.
                 </p>
-              </div>
+              </button>
 
-              <div
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "ask"}
                 onClick={() => setActiveTab("ask")}
-                className={`cursor-pointer rounded-xl border p-3 transition-all ${
+                className={cn(
+                  "w-full text-left rounded-xl border p-3 transition-all",
                   activeTab === "ask"
-                    ? "border-primary bg-card shadow-sm"
-                    : "border-border/60 bg-card/60 hover:bg-card"
-                }`}
+                    ? "border-primary bg-card shadow-xs"
+                    : "border-border bg-card/60 hover:bg-card"
+                )}
               >
                 <div className="flex items-center justify-between text-xs font-semibold text-foreground">
                   <div className="flex items-center gap-2">
@@ -99,11 +112,11 @@ export function ChromeExtensionShowcase() {
                 <p className="text-[11px] text-muted-foreground mt-1">
                   Ask nuanced questions where the AI automatically references the page content.
                 </p>
-              </div>
+              </button>
             </div>
 
             {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-4">
+            <div className="flex flex-wrap items-center gap-3 pt-3">
               <Link href="/extension">
                 <Button size="lg" className="gap-2 text-xs font-semibold">
                   <Chrome className="h-4 w-4" />
@@ -125,12 +138,12 @@ export function ChromeExtensionShowcase() {
 
           {/* Right Column: Realistic Chrome Side Panel Mockup */}
           <div className="lg:col-span-7">
-            <div className="relative rounded-2xl border border-border bg-card shadow-2xl overflow-hidden glass-panel">
+            <div className="relative rounded-2xl border border-border bg-card shadow-xl overflow-hidden glass-panel">
               {/* Chrome Browser Header with Tabs & Address Bar */}
-              <div className="border-b border-border bg-muted/60 px-4 py-2.5 space-y-2">
+              <div className="border-b border-border bg-muted/60 px-4 py-2 space-y-2">
                 {/* Browser Tab */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 bg-card rounded-t-lg px-3 py-1 text-xs border-t border-x border-border/80 text-foreground font-medium max-w-xs truncate">
+                  <div className="flex items-center gap-2 bg-card rounded-t-lg px-3 py-1 text-xs border-t border-x border-border text-foreground font-medium max-w-xs truncate">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                     <span className="truncate">Nature: Scalable Quantum Error Correction</span>
                   </div>
@@ -150,7 +163,7 @@ export function ChromeExtensionShowcase() {
               {/* Two Column Simulated Layout: Left is Webpage, Right is Docked EchoGPT Side Panel */}
               <div className="grid grid-cols-12 min-h-[380px]">
                 {/* Simulated Webpage Article (7 cols) */}
-                <div className="col-span-7 p-4 sm:p-5 border-r border-border/80 bg-background/50 space-y-3 hidden sm:block">
+                <div className="col-span-7 p-4 sm:p-5 border-r border-border bg-background/50 space-y-3 hidden sm:block">
                   <div className="text-[10px] text-muted-foreground uppercase font-mono">
                     Article Preview
                   </div>
@@ -172,7 +185,7 @@ export function ChromeExtensionShowcase() {
                 {/* Docked EchoGPT Side Panel (5 cols on desktop, full width on small screens) */}
                 <div className="col-span-12 sm:col-span-5 bg-card flex flex-col justify-between p-3.5 space-y-3">
                   {/* Side Panel Header */}
-                  <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                  <div className="flex items-center justify-between border-b border-border pb-2">
                     <div className="flex items-center gap-1.5">
                       <ModelIcon provider="openai" size="sm" />
                       <span className="text-xs font-bold text-foreground">GPT-4o</span>
@@ -188,7 +201,7 @@ export function ChromeExtensionShowcase() {
                   </div>
 
                   {/* Assistant Response Box */}
-                  <div className="rounded-xl border border-border/70 bg-background/80 p-3 text-xs space-y-2 flex-1 overflow-y-auto max-h-[220px]">
+                  <div className="rounded-xl border border-border bg-background/80 p-3 text-xs space-y-2 flex-1 overflow-y-auto max-h-[220px]">
                     <div className="font-semibold text-foreground text-[11px] flex items-center gap-1">
                       <Sparkles className="h-3 w-3 text-primary" />
                       <span>
@@ -209,7 +222,7 @@ export function ChromeExtensionShowcase() {
                   </div>
 
                   {/* Side Panel Input Bar */}
-                  <div className="pt-2 border-t border-border/60 flex items-center gap-1.5">
+                  <div className="pt-2 border-t border-border flex items-center gap-1.5">
                     <input
                       type="text"
                       readOnly
@@ -217,7 +230,7 @@ export function ChromeExtensionShowcase() {
                       className="w-full bg-muted/60 rounded-lg px-2.5 py-1 text-[11px] text-muted-foreground cursor-pointer"
                     />
                     <Link href="/extension">
-                      <Button size="icon-sm" className="h-6 w-6">
+                      <Button size="icon-sm" className="h-6 w-6" aria-label="Open extension simulator">
                         <Send className="h-3 w-3" />
                       </Button>
                     </Link>

@@ -42,10 +42,12 @@ export function WorkspaceSidebar() {
     setIsSidebarOpen,
     isCompareMode,
     setIsCompareMode,
+    clearAllConversations,
   } = useApp();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
+  const [isConfirmingClear, setIsConfirmingClear] = useState<boolean>(false);
 
   // Filter conversations
   const filteredConversations = conversations.filter((c) => {
@@ -200,6 +202,43 @@ export function WorkspaceSidebar() {
               );
             })}
           </div>
+        </div>
+
+        {/* Conversations List Header & Counter */}
+        <div className="px-3 pt-2 pb-1 flex items-center justify-between text-[11px] text-muted-foreground">
+          <span>{filteredConversations.length} Threads</span>
+          {isConfirmingClear ? (
+            <div className="flex items-center gap-1.5 text-[10px]">
+              <span className="text-rose-500 font-semibold">Clear all?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  clearAllConversations();
+                  setIsConfirmingClear(false);
+                }}
+                className="text-rose-500 font-bold hover:underline"
+              >
+                Yes
+              </button>
+              <span>/</span>
+              <button
+                type="button"
+                onClick={() => setIsConfirmingClear(false)}
+                className="hover:underline"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsConfirmingClear(true)}
+              className="hover:text-rose-500 text-[10px] transition-colors"
+              title="Clear all conversations"
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         {/* Conversations List */}

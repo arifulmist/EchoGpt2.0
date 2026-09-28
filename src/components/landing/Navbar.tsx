@@ -14,13 +14,13 @@ export function Navbar() {
   const { setIsCommandPaletteOpen } = useApp();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/60 glass-nav">
+    <header className="sticky top-0 z-40 w-full border-b border-border glass-nav" role="banner">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
         <Logo size="md" />
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
+        <nav aria-label="Global navigation" className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
           <Link
             href="/workspace"
             className="hover:text-foreground transition-colors flex items-center gap-1.5"
@@ -57,8 +57,9 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setIsCommandPaletteOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-card px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Open command palette"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary"
+            aria-label="Open command palette (Cmd+K)"
+            title="Open command palette (Cmd+K)"
           >
             <Command className="h-3 w-3" />
             <span>K</span>
@@ -74,7 +75,7 @@ export function Navbar() {
           </Link>
 
           <Link href="/workspace">
-            <Button size="sm" className="gap-1.5 text-xs font-semibold">
+            <Button size="sm" className="gap-1.5 text-xs font-semibold shadow-xs">
               <span>Launch App</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
@@ -99,7 +100,7 @@ export function Navbar() {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-border bg-card/95 backdrop-blur-md px-4 pt-3 pb-6 animate-in slide-in-from-top-2">
-          <nav className="flex flex-col space-y-3 text-sm font-medium">
+          <nav aria-label="Mobile navigation" className="flex flex-col space-y-3 text-sm font-medium">
             <Link
               href="/workspace"
               onClick={() => setMobileMenuOpen(false)}

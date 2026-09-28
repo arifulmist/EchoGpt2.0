@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Send,
   Sparkles,
@@ -46,11 +46,37 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeConversation?.messages, isStreaming]);
+
+  // Close dropdown on outside click or Escape
+  const closeDropdown = useCallback(() => {
+    setIsModelDropdownOpen(false);
+  }, []);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        closeDropdown();
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeDropdown();
+    };
+
+    if (isModelDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keydown", handleEsc);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [isModelDropdownOpen, closeDropdown]);
 
   const handleSend = () => {
     if (!prompt.trim() || isStreaming) return;
@@ -85,12 +111,14 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
   return (
     <div
       className={cn(
-        "relative flex flex-col h-full w-full max-w-[420px] bg-card border border-border/80 shadow-2xl overflow-hidden font-sans",
+        "relative flex flex-col h-full w-full max-w-[420px] bg-card border border-border shadow-2xl overflow-hidden font-sans",
         className
       )}
+      role="region"
+      aria-label="EchoGPT Chrome Side Panel"
     >
       {/* 1. Header Toolbar */}
-      <header className="flex items-center justify-between border-b border-border/70 px-3 py-2.5 bg-muted/40 shrink-0">
+      <header className="flex items-center justify-between border-b border-border px-3 py-2 bg-muted/40 shrink-0">
         <div className="flex items-center gap-2">
           <Logo size="sm" asLink={false} badgeText="v1.0.5" />
         </div>
@@ -101,7 +129,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
           <button
             type="button"
             onClick={() => createNewConversation()}
-            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary"
             title="Start New Thread"
             aria-label="New Thread"
           >
@@ -112,7 +140,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
           <button
             type="button"
             onClick={() => setIsHistoryOpen(true)}
-            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary"
             title="Session History"
             aria-label="History"
           >
@@ -123,7 +151,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
           <button
             type="button"
             onClick={() => setIsSettingsOpen(true)}
-            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary"
             title="Side Panel Settings"
             aria-label="Settings"
           >
@@ -134,7 +162,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
           <button
             type="button"
             onClick={() => setIsAuthOpen(true)}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-500 font-bold text-[10px] border border-emerald-500/30 hover:scale-105 transition-transform ml-1"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-500 font-bold text-[10px] border border-emerald-500/30 hover:scale-105 transition-transform ml-1 focus-visible:ring-1 focus-visible:ring-primary"
             title="Account Session"
             aria-label="Account"
           >
@@ -144,14 +172,16 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
       </header>
 
       {/* 2. Model Switcher & Webpage Context Bar */}
-      <div className="border-b border-border/60 bg-background/80 px-3 py-2 space-y-1.5 shrink-0">
+      <div className="border-b border-border bg-background/80 px-3 py-2 space-y-1.5 shrink-0">
         {/* Model Selector Bar */}
         <div className="flex items-center justify-between">
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-              className="flex items-center gap-1.5 rounded-md border border-border/70 bg-card px-2 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
+              aria-expanded={isModelDropdownOpen}
+              aria-haspopup="listbox"
+              className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-semibold text-foreground hover:bg-muted focus-visible:ring-1 focus-visible:ring-primary"
             >
               <ModelIcon provider={activeModel.provider} size="sm" />
               <span>{activeModel.shortName}</span>
@@ -159,11 +189,17 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
             </button>
 
             {isModelDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-52 rounded-xl border border-border bg-card p-1 shadow-xl z-20 animate-in fade-in">
+              <div
+                role="listbox"
+                aria-label="Side panel model selector"
+                className="absolute top-full left-0 mt-1 w-52 rounded-xl border border-border bg-card p-1 shadow-xl z-20 animate-in fade-in"
+              >
                 {models.map((m) => (
                   <button
                     key={m.id}
                     type="button"
+                    role="option"
+                    aria-selected={activeModel.id === m.id}
                     onClick={() => {
                       setActiveModelId(m.id);
                       setIsModelDropdownOpen(false);
@@ -187,14 +223,14 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
           </div>
 
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
-            <kbd className="rounded bg-muted px-1 py-0.5 border border-border font-bold">
+            <kbd className="rounded bg-muted px-1.5 py-0.5 border border-border font-bold">
               Ctrl+Shift+E
             </kbd>
           </div>
         </div>
 
         {/* Page Context Capsule */}
-        <div className="flex items-center justify-between rounded-lg border border-border/70 bg-muted/40 px-2.5 py-1 text-xs">
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
               className={cn(
@@ -211,7 +247,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
           <button
             type="button"
             onClick={togglePageContextEnabled}
-            className="text-[10px] text-primary hover:underline shrink-0 ml-2"
+            className="text-[10px] text-primary hover:underline shrink-0 ml-2 font-medium"
           >
             {activePageContext.enabled ? "Context Active" : "Enable"}
           </button>
@@ -219,12 +255,16 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
       </div>
 
       {/* 3. Quick Action Chips Toolbar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-1.5 border-b border-border/50 bg-card text-xs no-scrollbar shrink-0">
+      <div
+        className="flex items-center gap-1.5 overflow-x-auto px-3 py-1.5 border-b border-border bg-card text-xs no-scrollbar shrink-0"
+        role="toolbar"
+        aria-label="Side panel actions"
+      >
         <button
           type="button"
           onClick={handleSummarizePage}
           disabled={isStreaming}
-          className="rounded-full border border-border/70 bg-background px-2 py-0.5 text-[10px] text-foreground hover:border-primary/50 hover:bg-muted transition-colors shrink-0 flex items-center gap-1 font-medium"
+          className="rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] text-foreground hover:border-primary/50 hover:bg-muted transition-colors shrink-0 flex items-center gap-1 font-medium focus-visible:ring-1 focus-visible:ring-primary"
         >
           <FileText className="h-2.5 w-2.5 text-emerald-500" />
           <span>Summarize Page</span>
@@ -234,7 +274,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
           type="button"
           onClick={handleExplainSelection}
           disabled={isStreaming}
-          className="rounded-full border border-border/70 bg-background px-2 py-0.5 text-[10px] text-foreground hover:border-primary/50 hover:bg-muted transition-colors shrink-0 flex items-center gap-1 font-medium"
+          className="rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] text-foreground hover:border-primary/50 hover:bg-muted transition-colors shrink-0 flex items-center gap-1 font-medium focus-visible:ring-1 focus-visible:ring-primary"
         >
           <Highlighter className="h-2.5 w-2.5 text-amber-500" />
           <span>Explain Selected</span>
@@ -248,7 +288,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
             )
           }
           disabled={isStreaming}
-          className="rounded-full border border-border/70 bg-background px-2 py-0.5 text-[10px] text-foreground hover:border-primary/50 hover:bg-muted transition-colors shrink-0 flex items-center gap-1 font-medium"
+          className="rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] text-foreground hover:border-primary/50 hover:bg-muted transition-colors shrink-0 flex items-center gap-1 font-medium focus-visible:ring-1 focus-visible:ring-primary"
         >
           <Sparkles className="h-2.5 w-2.5 text-blue-500" />
           <span>Rewrite</span>
@@ -256,9 +296,14 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
       </div>
 
       {/* 4. Chat Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div
+        className="flex-1 overflow-y-auto p-3 space-y-3"
+        role="log"
+        aria-live="polite"
+        aria-label="Extension conversation"
+      >
         {!activeConversation || activeConversation.messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center py-10 px-3 space-y-4">
+          <div className="h-full flex flex-col items-center justify-center text-center py-8 px-3 space-y-3.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
               <Sparkles className="h-5 w-5" />
             </div>
@@ -271,14 +316,14 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
               </p>
             </div>
 
-            <div className="w-full space-y-1.5 pt-2">
+            <div className="w-full space-y-1.5 pt-1">
               <button
                 type="button"
                 onClick={handleSummarizePage}
                 className="w-full text-left rounded-lg border border-border bg-card p-2 text-[11px] text-foreground hover:border-primary/40 hover:bg-muted transition-all flex items-center justify-between"
               >
                 <span>⚡ Summarize {activePageContext.domain}</span>
-                <span className="text-[9px] text-primary">Run</span>
+                <span className="text-[10px] text-primary font-medium">Run</span>
               </button>
               <button
                 type="button"
@@ -286,7 +331,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
                 className="w-full text-left rounded-lg border border-border bg-card p-2 text-[11px] text-foreground hover:border-primary/40 hover:bg-muted transition-all flex items-center justify-between"
               >
                 <span>🔍 Explain Highlighted Section</span>
-                <span className="text-[9px] text-primary">Run</span>
+                <span className="text-[10px] text-primary font-medium">Run</span>
               </button>
             </div>
           </div>
@@ -319,7 +364,7 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
                     "rounded-xl p-3 text-xs leading-relaxed max-w-[92%]",
                     isUser
                       ? "bg-primary text-primary-foreground rounded-tr-xs"
-                      : "bg-muted/60 text-foreground border border-border/70 rounded-tl-xs"
+                      : "bg-muted/60 text-foreground border border-border rounded-tl-xs"
                   )}
                 >
                   <MarkdownRenderer content={msg.content} />
@@ -343,9 +388,13 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
       </div>
 
       {/* 5. Compact Bottom Composer */}
-      <div className="border-t border-border/80 bg-card p-2.5 shrink-0 space-y-2">
+      <footer className="border-t border-border bg-card p-2.5 shrink-0 space-y-2">
         <div className="relative rounded-xl border border-border bg-background shadow-xs focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+          <label htmlFor="side-panel-input" className="sr-only">
+            Ask about this page
+          </label>
           <textarea
+            id="side-panel-input"
             rows={1}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -363,12 +412,13 @@ export function ExtensionSidePanel({ className }: ExtensionSidePanelProps) {
               disabled={!prompt.trim() || isStreaming}
               onClick={handleSend}
               className="h-6 w-6"
+              aria-label="Send query"
             >
               <Send className="h-3 w-3" />
             </Button>
           </div>
         </div>
-      </div>
+      </footer>
 
       {/* Overlays / Drawers */}
       <ExtensionSettingsDrawer

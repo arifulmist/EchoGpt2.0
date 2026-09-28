@@ -51,11 +51,12 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
   };
 
   return (
-    <div
+    <article
       className={cn(
-        "group relative flex w-full gap-3 py-4 transition-colors",
+        "group relative flex w-full gap-3 py-3.5 transition-colors focus-within:bg-muted/10",
         isUser ? "justify-end" : "justify-start border-b border-border/40"
       )}
+      aria-label={`${isUser ? "User" : model?.name || "Assistant"} message`}
     >
       {/* Assistant Avatar */}
       {!isUser && (
@@ -67,7 +68,7 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
       {/* Message Content Container */}
       <div
         className={cn(
-          "flex flex-col space-y-2 max-w-[88%] md:max-w-[82%]",
+          "flex flex-col space-y-1.5 max-w-[88%] md:max-w-[84%]",
           isUser && "items-end"
         )}
       >
@@ -80,9 +81,11 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
                   Context: {message.pageContextSnippet}
                 </span>
               )}
-              <span className="font-medium text-foreground">You</span>
+              <span className="font-semibold text-foreground">You</span>
               <span>·</span>
-              <span className="text-[11px] font-mono">{formatTime(message.timestamp)}</span>
+              <time dateTime={message.timestamp} className="text-[11px] font-mono">
+                {formatTime(message.timestamp)}
+              </time>
             </>
           ) : (
             <>
@@ -90,11 +93,13 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
                 {model?.name || "EchoGPT Assistant"}
               </span>
               <span>·</span>
-              <span className="text-[11px] font-mono">{formatTime(message.timestamp)}</span>
+              <time dateTime={message.timestamp} className="text-[11px] font-mono">
+                {formatTime(message.timestamp)}
+              </time>
 
               {/* Performance Metrics */}
               {message.metrics && !message.isStreaming && (
-                <div className="hidden sm:flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
+                <div className="hidden sm:flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-mono text-muted-foreground border border-border/50">
                   <Zap className="h-2.5 w-2.5 text-amber-500" />
                   <span>{message.metrics.latencyMs}ms</span>
                   <span>·</span>
@@ -112,8 +117,8 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
           className={cn(
             "rounded-2xl text-xs md:text-sm leading-relaxed transition-all",
             isUser
-              ? "bg-primary text-primary-foreground p-3.5 shadow-sm rounded-tr-xs"
-              : "bg-card text-card-foreground p-4 border border-border/70 rounded-tl-xs shadow-xs"
+              ? "bg-primary text-primary-foreground p-3.5 shadow-xs rounded-tr-xs"
+              : "bg-card text-card-foreground p-4 border border-border rounded-tl-xs shadow-xs"
           )}
         >
           {isUser ? (
@@ -122,7 +127,10 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
             <div>
               <MarkdownRenderer content={message.content} />
               {message.isStreaming && (
-                <span className="inline-block h-3.5 w-1.5 bg-primary ml-1 animate-pulse align-middle" />
+                <span
+                  className="inline-block h-3.5 w-1.5 bg-primary ml-1 animate-pulse align-middle"
+                  aria-label="Generating text"
+                />
               )}
             </div>
           )}
@@ -131,7 +139,7 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
         {/* Footer Actions */}
         <div
           className={cn(
-            "flex items-center gap-1 text-muted-foreground text-xs opacity-0 group-hover:opacity-100 transition-opacity",
+            "flex items-center gap-1 text-muted-foreground text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100 transition-opacity pt-0.5",
             isUser ? "justify-end" : "justify-start"
           )}
         >
@@ -140,7 +148,7 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
             type="button"
             onClick={handleCopy}
             aria-label="Copy message text"
-            className="flex items-center gap-1 rounded-md p-1 hover:bg-muted hover:text-foreground transition-colors"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary"
           >
             {copied ? (
               <>
@@ -161,7 +169,7 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
               type="button"
               onClick={() => onEditPrompt(message.content)}
               aria-label="Edit prompt"
-              className="flex items-center gap-1 rounded-md p-1 hover:bg-muted hover:text-foreground transition-colors"
+              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary"
             >
               <Edit3 className="h-3.5 w-3.5" />
               <span className="text-[11px]">Edit</span>
@@ -176,7 +184,7 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
                 type="button"
                 onClick={regenerateLastResponse}
                 aria-label="Regenerate response"
-                className="flex items-center gap-1 rounded-md p-1 hover:bg-muted hover:text-foreground transition-colors"
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span className="text-[11px]">Regenerate</span>
@@ -186,15 +194,15 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
               <button
                 type="button"
                 onClick={handleCompareClick}
-                aria-label="Compare with other models"
-                className="flex items-center gap-1 rounded-md p-1 hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="Compare prompt across multiple models"
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary text-emerald-600 dark:text-emerald-400 font-medium"
               >
-                <Columns3 className="h-3.5 w-3.5 text-emerald-500" />
-                <span className="text-[11px]">Compare</span>
+                <Columns3 className="h-3.5 w-3.5" />
+                <span className="text-[11px]">Compare AI</span>
               </button>
 
               {/* Feedback Up/Down */}
-              <div className="flex items-center ml-2 border-l border-border/80 pl-2 gap-1">
+              <div className="flex items-center ml-2 border-l border-border pl-2 gap-1">
                 <button
                   type="button"
                   onClick={() =>
@@ -203,10 +211,11 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
                       message.reaction === "up" ? null : "up"
                     )
                   }
-                  aria-label="Good response"
+                  aria-label="Mark helpful"
+                  title="Mark helpful"
                   className={cn(
-                    "rounded p-1 hover:bg-muted hover:text-foreground",
-                    message.reaction === "up" && "text-emerald-500"
+                    "rounded p-1 hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary",
+                    message.reaction === "up" && "text-emerald-500 bg-emerald-500/10"
                   )}
                 >
                   <ThumbsUp className="h-3 w-3" />
@@ -219,10 +228,11 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
                       message.reaction === "down" ? null : "down"
                     )
                   }
-                  aria-label="Poor response"
+                  aria-label="Mark unhelpful"
+                  title="Mark unhelpful"
                   className={cn(
-                    "rounded p-1 hover:bg-muted hover:text-foreground",
-                    message.reaction === "down" && "text-rose-500"
+                    "rounded p-1 hover:bg-muted hover:text-foreground transition-colors focus-visible:ring-1 focus-visible:ring-primary",
+                    message.reaction === "down" && "text-rose-500 bg-rose-500/10"
                   )}
                 >
                   <ThumbsDown className="h-3 w-3" />
@@ -236,11 +246,11 @@ export function ChatMessageItem({ message, onEditPrompt }: ChatMessageItemProps)
       {/* User Avatar */}
       {isUser && (
         <div className="shrink-0 mt-0.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary border border-primary/30">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary border border-primary/25">
             <User className="h-4 w-4" />
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }
